@@ -1,7 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 
+using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -17,7 +15,7 @@ public class GamePlayScript : MonoBehaviour
     {
         Instance = this;
     }
-    
+
 
     public float MovingSpeed;
     public float timeSpawnItem;
@@ -34,46 +32,39 @@ public class GamePlayScript : MonoBehaviour
         timeDeath = 0;
         level = 1;
     }
-    
+
     // Update is called once per frame
     void Update()
     {
 
-
-            
-            timeSpawnItem += Time.deltaTime;
-            timePlay += Time.deltaTime;
-            if (timePlay>=50)
+        timeSpawnItem += Time.deltaTime;
+        timePlay += Time.deltaTime;
+        if (timePlay >= 50)
+        {
+            timePlay = 0;
+            MovingSpeed += 2;
+            EventScript.Instance.LvUp.Invoke();
+            level++;
+            if (level > 4)
             {
-                timePlay = 0;
-                MovingSpeed += 2;
-                RecTransformUI.Instance.scaleScore++;
-                level++;
-                if (level>4)
-                {
-                    level = 4;
-                }
+                level = 4;
+            }
+        }
+
+        if (isDeath)
+        {
+            if (Player.transform.position.y > 0)
+            {
+                Player.transform.position += new Vector3(0, -0.05f, -0);
             }
 
-            if (isDeath)
+            if (Player.transform.position.z >= -3)
             {
-                timeDeath += 0.01f;
-                if (Player.transform.position.y>0)
-                {
-                    Player.transform.position += new Vector3(0,-0.05f,-0);
-                }
-
-                if (Player.transform.position.z >= -3)
-                {
-                    Player.transform.position += new Vector3(0,0,-0.5f);
-                }
+                Player.transform.position += new Vector3(0, 0, -0.5f);
             }
+        }
 
-            if (timeDeath>=3)
-            {
-                ButtonScript.Instance.isComplete.SetActive(true);
-                timeDeath = 0;
-            }
+       
 
     }
 
@@ -81,43 +72,78 @@ public class GamePlayScript : MonoBehaviour
     public void Gameover()
     {
         Time.timeScale = 0f;
-        SwipeManager.Instance.animatorPlayer.updateMode = AnimatorUpdateMode.UnscaledTime;
-        Player.GetComponent<Rigidbody>().velocity = new Vector3(0,0,5);
+        /*AdManager.Instance.RequestBanner();*/
+        AnimationController.Instance.animatorPlayer.updateMode = AnimatorUpdateMode.UnscaledTime;
+        Player.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 5);
         ButtonScript.Instance.isPlaying.SetActive(false);
-        if (Random.Range(0,2)==1)
+        if (Random.Range(0, 2) == 1)
         {
-            SwipeManager.Instance.animatorPlayer.SetBool("isDeath1", true);
+            AnimationController.Instance.AnimationSetBool("isDeath1", true);
         }
         else
         {
-            SwipeManager.Instance.animatorPlayer.SetBool("isDeath2", true);
+            AnimationController.Instance.AnimationSetBool("isDeath2", true);
         }
         isDeath = true;
-        SaveData.Instance.DataCoin += RecTransformUI.Instance.CountCoin;
+        StartCoroutine(CDDeath());
+        SaveData.Instance.DataCoin += Config.Instance.Coin;
         getHighScore();
         SaveData.Instance.Save();
-        
 
+    
     }
+    IEnumerator CDDeath()
+    {
+        yield return new WaitForSecondsRealtime(3);
+        ButtonScript.Instance.isComplete.SetActive(true);
+        yield return RecTransformUI.Instance.OpenTable(RecTransformUI.Instance.recCompleteTable, RecTransformUI.Instance.scaleX*0.8f);
+        yield return new WaitForSecondsRealtime(0.5f);
+        StartCoroutine(CDupScore());
+    }
+    IEnumerator CDupScore()
+    {
+        yield return new WaitForSecondsRealtime(0.01f);
+        if (RecTransformUI.Instance.ScoreGameOver < (int)Config.Instance.Score)
+        {
+            RecTransformUI.Instance.ScoreGameOver += (int)((int)Config.Instance.Score - RecTransformUI.Instance.ScoreGameOver) * 3 / 100 + 1;
+            RecTransformUI.Instance.textScoreGameOver.text = RecTransformUI.Instance.ScoreGameOver.ToString();
+            yield return CDupScore();
 
+        }    
+        else
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+           yield return CDupCoin();
+        }
+    }
+    IEnumerator CDupCoin()
+    {
+        yield return new WaitForSecondsRealtime(0.01f);
+        if (RecTransformUI.Instance.CoinGameOver < Config.Instance.Coin)
+        {
+            RecTransformUI.Instance.CoinGameOver += (int)((int)Config.Instance.Coin - RecTransformUI.Instance.CoinGameOver) * 3 / 100 + 1;
+            RecTransformUI.Instance.textCoinGameOver.text = RecTransformUI.Instance.CoinGameOver.ToString();
+            yield return (CDupCoin());
+        }
+    }
     public void getHighScore()
     {
-        for (int  i= 0;  i< SaveData.Instance.highscore.Count; i++)
+        for (int i = 0; i < SaveData.Instance.highscore.Count; i++)
         {
-            if ((int)RecTransformUI.Instance.Score>SaveData.Instance.highscore[i])
+            if ((int)Config.Instance.Score > SaveData.Instance.highscore[i])
             {
                 RecTransformUI.Instance.NewRecord.SetActive(true);
                 RecTransformUI.Instance.medal.SetActive(true);
                 RecTransformUI.Instance.countMedal.text = (i + 1).ToString();
                 for (int j = 4; j > i; j--)
                 {
-                    SaveData.Instance.highscore[j ] = SaveData.Instance.highscore[j-1];
+                    SaveData.Instance.highscore[j] = SaveData.Instance.highscore[j - 1];
                 }
-                SaveData.Instance.highscore[i] =(int) RecTransformUI.Instance.Score;
-                SaveData.Instance.saveHighScore();
-                 return;
+                SaveData.Instance.highscore[i] = (int)Config.Instance.Score;
+                SaveData.Instance.SaveHighScore();
+                return;
             }
         }
     }
-    
+
 }

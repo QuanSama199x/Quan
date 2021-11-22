@@ -22,15 +22,16 @@ public class Road7Script : MonoBehaviour
         spawnCoininRoad();
         SpawnIteminRoad();
         spawnTraininRoad();
+        SpawnBlockinRoad();
     }
 
     public void spawnTraininRoad()
     {
-        spawnTrain(ObjectPool.Instance.poolTran3.GetPooledObject(),new Vector3(-3,0,transform.position.z-60));
-        spawnTrain(ObjectPool.Instance.poolTran4.GetPooledObject(),new Vector3(0,0,transform.position.z+250));
-        spawnTrain(ObjectPool.Instance.poolTran4.GetPooledObject(),new Vector3(0,0,transform.position.z+300));
-        spawnTrain(ObjectPool.Instance.poolTran4.GetPooledObject(),new Vector3(0,0,transform.position.z+350));
-        spawnTrain(ObjectPool.Instance.poolTran4.GetPooledObject(),new Vector3(0,0,transform.position.z+400));
+        spawnTrain(ObjectPool.Instance.poolTrain[2].GetPooledObject(Resources.Load<GameObject>("Train/Train3")),new Vector3(-3,0,transform.position.z-60));
+        spawnTrain(ObjectPool.Instance.poolTrain[3].GetPooledObject(Resources.Load<GameObject>("Train/Train4")),new Vector3(0,0,transform.position.z+250));
+        spawnTrain(ObjectPool.Instance.poolTrain[3].GetPooledObject(Resources.Load<GameObject>("Train/Train4")),new Vector3(0,0,transform.position.z+300));
+        spawnTrain(ObjectPool.Instance.poolTrain[3].GetPooledObject(Resources.Load<GameObject>("Train/Train4")),new Vector3(0,0,transform.position.z+350));
+        spawnTrain(ObjectPool.Instance.poolTrain[3].GetPooledObject(Resources.Load<GameObject>("Train/Train4")),new Vector3(0,0,transform.position.z+400));
     }
     public void spawnCoininRoad()
     {
@@ -58,12 +59,12 @@ public class Road7Script : MonoBehaviour
             switch (Random.Range(0,2))
             {
                 case 0:
-                    spawnItem(ObjectPool.Instance.poolMagnet.GetPooledObject(),
+                    spawnItem(ObjectPool.Instance.poolMagnet.GetPooledObject(Resources.Load<GameObject>("Item/magnet")),
                         new Vector3(40, 40, 40),new Vector3(3, .5f, transform.position.z-15));
                     
                     break;
                 case 1:
-                    spawnItem( ObjectPool.Instance.poolShoes.GetPooledObject(),
+                    spawnItem( ObjectPool.Instance.poolShoes.GetPooledObject(Resources.Load<GameObject>("Item/Shoes")),
                         new Vector3(0.03f, 0.03f, 0.03f),new Vector3(3, .5f, transform.position.z-15));
                     break;
             }
@@ -71,10 +72,15 @@ public class Road7Script : MonoBehaviour
         }
         
     }
-    
+
+    public void SpawnBlockinRoad()
+    {
+        SpawnBlocker(ObjectPool.Instance.PoolBlocker[0].GetPooledObject(Resources.Load<GameObject>("Blocker/Block" + 1)), new Vector3(3, 0.8f, transform.position.z));
+        SpawnBlocker(ObjectPool.Instance.PoolBlocker[2].GetPooledObject(Resources.Load<GameObject>("Blocker/Block" + 3)), new Vector3(0, 0.8f, transform.position.z));
+    }
     public void spawnCoin(Vector3 transformCoin)
     {
-        GameObject coin = (GameObject)ObjectPool.Instance.poolCoin.GetPooledObject();
+        GameObject coin = (GameObject)ObjectPool.Instance.poolCoin.GetPooledObject(Resources.Load<GameObject>("Item/Coin"));
         if (coin != null)
         {
             coin.SetActive(true);
@@ -97,6 +103,16 @@ public class Road7Script : MonoBehaviour
         }
     }
 
+    public void SpawnBlocker(GameObject blocker, Vector3 transform)
+    {
+        GameObject blockerspawn = blocker;
+        if (blockerspawn != null)
+        {
+            blockerspawn.SetActive(true);
+            blockerspawn.transform.SetParent(gameObject.transform);
+            blockerspawn.transform.position = transform;
+        }
+    }
     public void spawnTrain(GameObject train,Vector3 transform)
     {
         GameObject trainspawn = train;

@@ -13,44 +13,47 @@ public class ObjectPoolSFX : MonoBehaviour
         Instance = this;
     }
 
-    public List<AudioSource> PooledSFXgetCoin;
-    public int amountToPoolSFXgetCoin;
-    public AudioSource SFXgetCoin;
-    // Start is called before the first frame update
+    public PoolSFXElement SFXgetCoin;
     void Start()
     {
-        startSFX(PooledSFXgetCoin,amountToPoolSFXgetCoin,SFXgetCoin);
+        SFXgetCoin.startSFX(Resources.Load<AudioSource>("SFX/SoundgetCoin"));
     }
     
-    public AudioSource GetPooledSFXgetCoin(Vector3 position) {return GetPooledSFX(PooledSFXgetCoin, SFXgetCoin,position); }
-    
-    
-    
-    
-    
-    
-    public void startSFX(List<AudioSource> PooledAudioSource, int amountToPool, AudioSource AudioSourcetoPool)
-    { 
-        for (int i = 0; i < amountToPool; i++) { 
-            var obj = Instantiate(AudioSourcetoPool); 
-            obj.Stop(); 
-            PooledAudioSource.Add(obj); 
+}
+
+[System.Serializable]
+public class PoolSFXElement
+{
+    public List<AudioSource> PooledSFX;
+    public int amountToPoolSFX;
+
+    public void startSFX(AudioSource x)
+    {
+        for (int i = 0; i < amountToPoolSFX; i++)
+        {
+            AudioSource obj = x;
+            var obj1 =AudioSource.Instantiate(obj);
+            obj1.Stop();
+            PooledSFX.Add(obj1);
         }
     }
 
-    public AudioSource GetPooledSFX(List<AudioSource> PooledAudioSource,AudioSource AudioSourcetoPool,Vector3 position)
+    public AudioSource GetPooledSFX(AudioSource x, Vector3 position)
     {
-        for (int i = 0; i < PooledAudioSource.Count; i++) {
-            if (!PooledAudioSource[i].isPlaying)
+        for (int i = 0; i < PooledSFX.Count; i++)
+        {
+            if (!PooledSFX[i].isPlaying)
             {
-                PooledAudioSource[i].transform.position = position;
-                return PooledAudioSource[i]; 
+                PooledSFX[i].transform.position = position;
+                return PooledSFX[i];
             }
         }
-        var obj = Instantiate(AudioSourcetoPool); 
-        obj.Stop();
-        obj.transform.position = position;
-        PooledAudioSource.Add(obj); 
-        return obj;
+        AudioSource obj = x;
+        var obj1 = AudioSource.Instantiate(obj);
+        obj1.Stop();
+        PooledSFX.Add(obj1);
+        obj1.transform.position = position;
+        
+        return obj1;
     }
 }

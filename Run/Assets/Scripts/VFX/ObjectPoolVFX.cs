@@ -13,44 +13,46 @@ public class ObjectPoolVFX : MonoBehaviour
         Instance = this;
     }
 
-    public List<ParticleSystem> PooledVFXgetCoin;
-    public int amountToPoolVFXgetCoin;
-    public ParticleSystem VFXgetCoin;
-    // Start is called before the first frame update
+    public PoolVFXElement VFXgetCoin;
     void Start()
     {
-        startVFX(PooledVFXgetCoin,amountToPoolVFXgetCoin,VFXgetCoin);
+        VFXgetCoin.startVFX(Resources.Load<ParticleSystem>("VFX/VFXgetCoin"));
     }
-    
-    public ParticleSystem GetPooledVFXgetCoin(Vector3 position) {return GetPooledVFX(PooledVFXgetCoin, VFXgetCoin,position); }
-    
-    
-    
-    
-    
-    
-    public void startVFX(List<ParticleSystem> PooledParticleSystem, int amountToPool, ParticleSystem ParticleSystemtoPool)
-    { 
-        for (int i = 0; i < amountToPool; i++) { 
-            var obj = Instantiate(ParticleSystemtoPool); 
-            obj.Stop(); 
-            PooledParticleSystem.Add(obj); 
+
+}
+
+[System.Serializable]
+public class PoolVFXElement
+{
+    public List<ParticleSystem> PooledVFX;
+    public int amountToPoolVFX;
+
+    public void startVFX(ParticleSystem x)
+    {
+        for (int i = 0; i < amountToPoolVFX; i++)
+        {
+            ParticleSystem obj = x;
+            var obj1 =ParticleSystem.Instantiate(obj);
+            obj1.Stop();
+            PooledVFX.Add(obj1);
         }
     }
 
-    public ParticleSystem GetPooledVFX(List<ParticleSystem> PooledParticleSystem,ParticleSystem ParticleSystemtoPool,Vector3 position)
+    public ParticleSystem GetPooledVFX(ParticleSystem x, Vector3 position)
     {
-        for (int i = 0; i < PooledParticleSystem.Count; i++) {
-            if (!PooledParticleSystem[i].isStopped)
+        for (int i = 0; i < PooledVFX.Count; i++)
+        {
+            if (!PooledVFX[i].isStopped)
             {
-                PooledParticleSystem[i].transform.position = position;
-                return PooledParticleSystem[i]; 
+                PooledVFX[i].transform.position = position;
+                return PooledVFX[i];
             }
         }
-        var obj = Instantiate(ParticleSystemtoPool); 
-        obj.Stop();
+        ParticleSystem obj = x;
+        var obj1 = ParticleSystem.Instantiate(obj);
+        obj1.Stop();
+        PooledVFX.Add(obj1);
         obj.transform.position = position;
-        PooledParticleSystem.Add(obj); 
-        return obj;
+        return obj1;
     }
 }

@@ -1,174 +1,232 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Profiling.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class PlayerScript : MonoBehaviour
 {
-    
+    #region properties
+
     public static PlayerScript Instance;
+    public const string DANCE = "Dance";
+    public const string IS_STUN = "isStun";
+    public const string IS_JUMP = "isJump";
+    public const string IS_ROLL = "isRoll";
+    public const string BLOCK1 = "Block1";
+    public const string BLOCK2 = "Block2";
+    public const string BLOCK3 = "Block3";
+    public const string BLOCK_TRAIN = "Шапка_1_9";
+    public const string BLOCKER = "Blocker";
+    public const string NON_BLOCK = "nonBlocker";
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    public const string COIN = "Coin";
+    public const string MAGNET = "magnet";
+    public const string SHOES = "Shoes";
 
-    public GameObject shoeLeft, shoeRight,magnet;
-    
-    public List<GameObject> left;
-    public List<GameObject> right;
-    public List<GameObject> hand;
+    public const string ROAD = "Road";
+    public const string TRAIN = "Train";
 
     private Vector3 viewPoint;
 
     public bool isroll;
 
     public float timeStun;
-
+    public int maxTimeStun=4;
+    /*[Header(("Const"))]*/
     public float timeIdle;
     public bool idle, dance;
     public float timeDance;
+    public int maxTimeIdle = 2, maxTimeDance = 5;
 
     public bool isHaveShield;
     public GameObject shield;
     public int powerShield;
-    public float timeUseShield;
-    /*private float t;*/
 
-    public float timeGetItem;
+    public int rangeSuckCoin = 8;
+
+    public int scaleScoreGetCoin = 10;
+
+    #endregion
     // Start is called before the first frame update
+    private void Awake()
+    {
+        Instance = this;
+    }
     void Start()
     {
-        timeUseShield = 0;
+
         shield.SetActive(false);
         isHaveShield = false;
         idle = true;
         /*t = 0;*/
-        magnet.SetActive(false);
-        shoeLeft.SetActive(false);
-        shoeRight.SetActive(false);
-        timeGetItem = 0;
+      
         timeStun = 4;
-            viewPoint = new Vector3(0, 5.22f,-4.73f);
+        viewPoint = new Vector3(0, 5.22f, -4.73f);
     }
+
+   
 
     // Update is called once per frame
     void Update()
     {
+        InputScript.Instance.swipe();
+        if (Time.timeScale == 1)
+        {
+            InputScript.Instance.InputController();
+        }
         if (!ButtonScript.Instance.isPlay)
         {
             if (idle)
             {
                 timeIdle += 0.002f;
-                if (timeIdle>=2)
+                if (timeIdle >= maxTimeIdle)
                 {
                     idle = false;
                     dance = true;
                     timeIdle = 0;
-                    SwipeManager.Instance.animatorPlayer.SetInteger("Dance",Random.Range(1,4));
+                    AnimationController.Instance.AnimationInteger(DANCE,Random.Range(1,4));
                 }
             }
-
             if (dance)
             {
                 timeDance += 0.002f;
-                if (timeDance>=5)
+                if (timeDance >= maxTimeDance)
                 {
                     idle = true;
                     dance = false;
                     timeDance = 0;
-                    SwipeManager.Instance.animatorPlayer.SetInteger("Dance",0);
+                    AnimationController.Instance.AnimationInteger(DANCE,0);
                 }
             }
-            
         }
-        Camera.main.transform.position = Vector3.Lerp(new Vector3(Camera.main.transform.position.x,Camera.main.transform.position.y,Camera.main.transform.position.z), new Vector3(transform.position.x,viewPoint.y,Camera.main.transform.position.z), 5 * Time.deltaTime);
-        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y,
+
+
+        if (Mathf.Abs(SwipeManager.Instance.emty.transform.position.x - transform.position.x) <= 1)
+        {
+            SwipeManager.Instance.nonEmty.x = SwipeManager.Instance.emty.transform.position.x;
+        }
+        SwipeManager.Instance.emty.transform.position = new Vector3(SwipeManager.Instance.emty.transform.position.x, transform.position.y,transform.position.z);
+
+
+
+        transform.position = Vector3.Lerp(transform.position,SwipeManager.Instance.emty.transform.position, 5 * Time.deltaTime);
+        if (InputScript.Instance.swipeLeft)
+        {
+            SwipeManager.Instance.moveLeft();
+        }
+
+        if (InputScript.Instance.swipeRight)
+        {
+            SwipeManager.Instance.moveRight();
+        }
+
+        if (InputScript.Instance.swipeUp && SwipeManager.Instance.countJump == true)
+        {
+            SwipeManager.Instance.timeroll = 1;
+            SwipeManager.Instance.countJump = false;
+            AnimationController.Instance.AnimationSetBool(IS_JUMP, true);
+            SwipeManager.Instance.Jump();
+        }
+
+        if (InputScript.Instance.swipeDown && SwipeManager.Instance.timeroll == 0)
+        {
+            PlayerScript.Instance.isroll = true;
+            SwipeManager.Instance.Down();
+        }
+
+        if (Mathf.Abs(transform.position.x - SwipeManager.Instance.emty.transform.position.x) <= 0.3 && transform.forward != Vector3.zero)
+        {
+            transform.forward = Vector3.zero;
+
+        }
+
+        if (SwipeManager.Instance.istimeroll)
+        {
+            SwipeManager.Instance.colliderPlayer.gameObject.transform.localScale = new Vector3(1, 0.5f, 1);
+            SwipeManager.Instance.timeroll += Time.deltaTime;
+
+        }
+        if (SwipeManager.Instance.timeroll >= 1)
+        {
+            SwipeManager.Instance.colliderPlayer.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            SwipeManager.Instance.timeroll = 0;
+            AnimationController.Instance.AnimationSetBool(IS_ROLL, false);
+            SwipeManager.Instance.istimeroll = false;
+        }
+
+        if (Custom.Instance.timeGetItem >= Custom.Instance.maxTimeGetItem)
+        {
+            Custom.Instance.timeGetItem = 0;
+            Custom.Instance.isGetMagnet = false;
+        }
+
+        var transform1 = Camera.main.transform;
+        var position = transform1.position;
+        Camera main;
+        (main = Camera.main).transform.position = Vector3.Lerp(new Vector3(position.x, position.y, position.z), new Vector3(transform.position.x, viewPoint.y, position.z), 5 * Time.deltaTime);
+        var position1 = main.transform.position;
+        position1 = new Vector3(position1.x, position1.y,
             transform.position.z - 4.73f);
+        main.transform.position = position1;
         if (transform.position.y < 0)
         {
             transform.position = new Vector3(transform.position.x, 0, transform.position.z);
         }
-        
-
-
         /*Camera.main.transform.position = new Vector3(transform.position.x,transform.position.y+2,transform.position.z);*/
-
-        if (isGetMagnet)
+        if (Custom.Instance.isGetMagnet)
         {
-            GetMagnet();
+            Custom.Instance.GetMagnet();
         }
-        if (isGetShoes)
+        if (Custom.Instance.isGetShoes)
         {
-            getShoes();
+            Custom.Instance.GetShoes();
         }
-
         if (isStun)
         {
             timeStun -= Time.deltaTime;
-            if (timeStun<=0)
+            if (timeStun <= 0)
             {
-                timeStun = 4;
+                timeStun = maxTimeStun;
                 isStun = false;
-                SwipeManager.Instance.animatorPlayer.SetBool("isStun",false);
+                AnimationController.Instance.AnimationSetBool(IS_STUN, false);
             }
         }
-
         if (isHaveShield)
         {
-            timeUseShield += Time.deltaTime;
-            RecTransformUI.Instance.timeUseShield.fillAmount =(float) timeUseShield / 20;
-            shield.SetActive(true);
-            if (timeUseShield>=20)
-            {
-                RecTransformUI.Instance.haveShield = false;
-                isHaveShield = false;
-            }
+            Custom.Instance.GetShield();
         }
-
         if (!isHaveShield)
         {
-            shield.SetActive(false);
-            timeUseShield = 0;
+            Custom.Instance.UnGetShield();
         }
-        
-        
-        
-    }
 
+    }
 
     public void OnCollisionEnter(Collision other)
     {
         if (isStun)
         {
-            SwipeManager.Instance.animatorPlayer.SetBool("isStun",true);
+            AnimationController.Instance.AnimationSetBool(IS_STUN, true);
         }
         else
         {
-            SwipeManager.Instance.animatorPlayer.SetBool("isJump",false);
+            AnimationController.Instance.AnimationSetBool(IS_JUMP, false);
         }
-        if (SwipeManager.Instance.isjump&& !isroll)
+        if (SwipeManager.Instance.isjump && !isroll)
         {
             SwipeManager.Instance.isjump = false;
-            SwipeManager.Instance.animatorPlayer.SetBool("isJump",false);
+            AnimationController.Instance.AnimationSetBool(IS_JUMP, false);
         }
-        
-        
+
+
     }
-    
 
     public bool isStun;
     public void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag =="Coin" )
+        if (other.gameObject.tag == COIN)
         {
-            RecTransformUI.Instance.CountCoin+=2;
-            RecTransformUI.Instance.Score += RecTransformUI.Instance.scaleScore * 10;
-            ObjectPoolVFX.Instance.GetPooledVFXgetCoin(other.transform.position).Play();
-            ObjectPoolSFX.Instance.GetPooledSFXgetCoin(other.transform.position).Play();
+            EventScript.Instance.OnGetCoin.Invoke();
+            ObjectPoolVFX.Instance.VFXgetCoin.GetPooledVFX(Resources.Load<ParticleSystem>("VFX/VFXgetCoin"),other.transform.position).Play();
+            ObjectPoolSFX.Instance.SFXgetCoin.GetPooledSFX(Resources.Load<AudioSource>("SFX/SoundgetCoin"),other.transform.position).Play(); ;
             other.transform.SetParent(null);
             other.transform.position = new Vector3(1000, 1000, 1000);
             other.gameObject.SetActive(false);
@@ -177,28 +235,29 @@ public class PlayerScript : MonoBehaviour
         {
             switch (other.gameObject.name)
             {
-                case "Block1":
+                case BLOCK1:
                     powerShield -= 1;
                     break;
-                case "Block2":
+                case BLOCK2:
                     powerShield -= 1;
                     break;
-                case "Block3":
+                case BLOCK3:
                     powerShield -= 1;
                     break;
-                case "Шапка_1_9":
+                case BLOCK_TRAIN:
                     other.gameObject.transform.parent.transform.parent.transform.parent.transform.parent.gameObject.SetActive(false);
                     other.gameObject.transform.parent.transform.parent.transform.parent.transform.parent.SetParent(null);
                     powerShield -= 1;
                     break;
-                case "nonBlocker":
+                case NON_BLOCK:
                     other.gameObject.transform.parent.gameObject.SetActive(false);
                     other.gameObject.transform.parent.SetParent(null);
                     powerShield -= 1;
                     break;
             }
-            if (powerShield<=0)
+            if (powerShield <= 0)
             {
+                RecTransformUI.Instance.haveShield = false;
                 isHaveShield = false;
             }
         }
@@ -206,131 +265,81 @@ public class PlayerScript : MonoBehaviour
         {
             switch (other.gameObject.tag)
             {
-                case "Blocker":
+                case BLOCKER:
                     GamePlayScript.Instance.Gameover();
                     break;
-                case "nonBlocker":
-                    Debug.LogError("vacham " + other.name + " " + other.GetHashCode());
+                case NON_BLOCK:
                     other.name = other.GetHashCode().ToString();
                     if (isStun)
                     {
                         GamePlayScript.Instance.Gameover();
-                        Debug.LogError("x");
                     }
                     else
                     {
-                        SwipeManager.Instance.animatorPlayer.SetBool("isStun",true);
-                        Debug.LogError(SwipeManager.Instance.emty.transform.position);
+                        AnimationController.Instance.AnimationSetBool(IS_STUN, true);
                         SwipeManager.Instance.emty.transform.position = new Vector3(SwipeManager.Instance.nonEmty.x, SwipeManager.Instance.emty.transform.position.y, SwipeManager.Instance.emty.transform.position.z);
-                        Debug.LogError(SwipeManager.Instance.emty.transform.position);
                         isStun = true;
                     }
                     break;
             }
         }
-        
 
-        if (other.gameObject.tag== "magnet")
+
+        if (other.gameObject.tag == MAGNET)
         {
-            isGetMagnet = true;
+            Custom.Instance.isGetMagnet = true;
             other.transform.SetParent(null);
             other.transform.position = new Vector3(1000, 1000, 1000);
             other.gameObject.SetActive(false);
         }
-        if (other.gameObject.tag== "Shoes")
+        if (other.gameObject.tag == SHOES)
         {
-            isGetShoes = true;
+            Custom.Instance.isGetShoes = true;
             other.transform.SetParent(null);
             other.transform.position = new Vector3(1000, 1000, 1000);
             other.gameObject.SetActive(false);
         }
     }
-    
+
     public void OnCollisionStay(Collision other)
     {
         viewPoint = other.gameObject.tag switch
         {
-            "Road" => new Vector3(0, 5.22f, -4.73f),
-            "Train" => new Vector3(0, 8.3789f, -4.73f),
+            ROAD => new Vector3(0, 5.22f, -4.73f),
+            TRAIN => new Vector3(0, 8.3789f, -4.73f),
             _ => viewPoint
         };
-        /*if (other.gameObject.name == "Куб_5 (1)")
+
+        if (other.gameObject.tag == TRAIN)
         {
-            GetComponent<Rigidbody>().velocity = Vector3.up;
-        }*/
-        if (other.gameObject.tag =="Train")
-        {
-            SwipeManager.Instance.animatorPlayer.SetBool("isJump",false);
+            AnimationController.Instance.AnimationSetBool(IS_JUMP, false);
         }
-        if(other.gameObject.tag == "Road"||other.gameObject.tag == "Train")
+        if (other.gameObject.tag == ROAD || other.gameObject.tag == TRAIN)
         {
             SwipeManager.Instance.countJump = true;
-            
+
             if (isroll)
             {
-                /*SwipeManager.Instance.animatorPlayer.Play("Roll");*/
-                SwipeManager.Instance.animatorPlayer.SetBool("isRoll",true);
+                AnimationController.Instance.AnimationSetBool(IS_ROLL, true);
                 SwipeManager.Instance.istimeroll = true;
                 isroll = false;
-                
+
             }
-            
+
         }
     }
     public void OnCollisionExit(Collision other)
     {
-        if(other.gameObject.tag == "Road"||other.gameObject.tag == "Train")
+        if (other.gameObject.tag == ROAD || other.gameObject.tag == TRAIN)
         {
-            
+
             SwipeManager.Instance.countJump = false;
         }
-        if(other.gameObject.tag == "Train")
+        if (other.gameObject.tag == TRAIN)
         {
-            
-            SwipeManager.Instance.animatorPlayer.SetBool("isJump",true);
-        }
-
-        /*if (other.gameObject.name == "Куб_5 (1)")
-        {
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
-        }*/
-    }
-
-
-    public bool isGetMagnet;
-    public bool isGetShoes;
-    private static readonly int Dance = Animator.StringToHash("Dance");
-
-
-    public void getShoes()
-    {
-        shoeLeft.SetActive(true);
-        shoeRight.SetActive(true);
-        SwipeManager.jumpPower = 9;
-        timeGetItem += Time.deltaTime;
-        RecTransformUI.Instance.shoes.SetActive(true);
-        if (timeGetItem>=15)
-        {
-            RecTransformUI.Instance.shoes.SetActive(false);
-            SwipeManager.jumpPower = 6;
-            isGetShoes = false;
-            timeGetItem = 0;
-            shoeLeft.SetActive(false);
-            shoeRight.SetActive(false);
-        }
-        
-    }
-    public void GetMagnet()
-    {
-        magnet.SetActive(true);
-        timeGetItem += Time.deltaTime;
-        RecTransformUI.Instance.magnet.SetActive(true);
-        if (timeGetItem>=15)
-        {
-            RecTransformUI.Instance.magnet.SetActive(false);
-            isGetMagnet = false;
-            timeGetItem = 0;
-            magnet.SetActive(false);
+            AnimationController.Instance.AnimationSetBool(IS_JUMP, true);
         }
     }
+    
 }
+

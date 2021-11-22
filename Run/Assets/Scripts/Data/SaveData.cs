@@ -8,28 +8,33 @@ public class SaveData : MonoBehaviour
 {
     public static SaveData Instance;
     public List<bool> boolcheckbuy;
-
     public List<int> highscore;
-    
+
+    public bool checkplay;
+    public int DataCoin = 0;
+    public int checkSelectChar;
+
+    public const string CHECK_PLAY = "checkplay";
+    public const string CHECK_BUY = "checkbuy";
+    public const string CHECK_SELECT_CHAR = "checkselectchar";
+    public const string HIGH_SCORE = "highscore";
+    public const string COIN = "Coin";
+
     private void Awake()
     {
         Instance = this;
     }
-
-    public int DataCoin=0;
-
-    public int checkSelectChar;
-    // Start is called before the first frame update
+    
     void Start()
     {
-        
-        for (int i = 0; i < highscore.Count; i++)
+        LoadData();
+        if (!checkplay)
         {
-            highscore[i] = 0;
+            DataCoin = 1000;
+            checkplay = true;
+            PlayerPrefs.SetInt(CHECK_PLAY,checkplay?1:0);
         }
-        
-        loadData();
-        loadHighScore();
+        LoadHighScore();
         Save();
         for (int i = 0; i < highscore.Count; i++)
         {
@@ -37,7 +42,6 @@ public class SaveData : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         
@@ -45,88 +49,67 @@ public class SaveData : MonoBehaviour
 
     public void Save()
     {
-        PlayerPrefs.SetInt("Coin",DataCoin);
-        for (int i = 0; i < boolcheckbuy.Count; i++)
+        PlayerPrefs.SetInt(COIN,DataCoin);
+        for (int i = 1; i < boolcheckbuy.Count; i++)
         {
-            PlayerPrefs.SetInt("checkbuy"+i,boolcheckbuy[i]?1:0);
+            PlayerPrefs.SetInt(CHECK_BUY+i,boolcheckbuy[i]?1:0);
         }
-
-        PlayerPrefs.SetInt("checkselectchar", checkSelectChar);
+        PlayerPrefs.SetInt(CHECK_SELECT_CHAR, checkSelectChar);
         PlayerPrefs.Save();
     }
 
-    public void saveHighScore()
+    public void SaveHighScore()
     {
         for (int i = 0; i < highscore.Count; i++)
         {
-            PlayerPrefs.SetInt("highscore"+i,highscore[i]);
+            PlayerPrefs.SetInt(HIGH_SCORE+i,highscore[i]);
         }
     }
 
-    public void loadHighScore()
+    public void LoadHighScore()
     {
         for (int i = 0; i < highscore.Count; i++)
         {
-            highscore[i] =PlayerPrefs.GetInt("highscore"+i);
+            highscore[i] =PlayerPrefs.GetInt(HIGH_SCORE+i);
         }
     }
-    public void loadData()
+
+    public void LoadData()
     {
-
-
-        DataCoin = PlayerPrefs.GetInt("Coin");
-        PlayerPrefs.SetInt("Coin",DataCoin);
-        for (int i = 0; i < boolcheckbuy.Count; i++)
+        if (PlayerPrefs.GetInt(CHECK_PLAY)==1)
         {
-            if (PlayerPrefs.GetInt("checkbuy"+i)==1)
+            checkplay = true;
+        }
+        DataCoin = PlayerPrefs.GetInt(COIN);
+        PlayerPrefs.SetInt(COIN,DataCoin);
+        for (int i = 1; i < boolcheckbuy.Count; i++)
+        {
+            if (PlayerPrefs.GetInt(CHECK_BUY+i)==1)
             {
                 boolcheckbuy[i] = true;
-                ButtonScript.Instance.checkbuy[i].SetActive(false);
+                ButtonScript.Instance.Character[i].checkBuy.SetActive(false);
             }
             else
             {
-                ButtonScript.Instance.checkbuy[i].SetActive(true);
+                ButtonScript.Instance.Character[i].checkBuy.SetActive(true);
                 boolcheckbuy[i] = false;
-            }
-            
-            
+            }                        
         }
-
-        checkSelectChar = PlayerPrefs.GetInt("checkselectchar");
-        switch (checkSelectChar)
-        {
-            case 0 :
-                ButtonScript.Instance.chooseHili();
-                break;
-            case 1 :
-                ButtonScript.Instance.chooseDiona();
-                break;
-            case 2 :
-                ButtonScript.Instance.choosePaimon();
-                break;
-            case 3 :
-                ButtonScript.Instance.chooseKlee();
-                break;
-            case 4 :
-                ButtonScript.Instance.chooseQiqi();
-                break;
-            case 5 :
-                ButtonScript.Instance.chooseElaina();
-                break;
-            case 6 :
-                ButtonScript.Instance.chooseHuman();
-                break;
-        }
+        checkSelectChar = PlayerPrefs.GetInt(CHECK_SELECT_CHAR);
+        ButtonScript.Instance.ChooseCharacters(checkSelectChar);
+                
     }
 
-    public void resetData()
+    public void ResetData()
     {
+        checkplay = false;
+        PlayerPrefs.SetInt(CHECK_PLAY,checkplay?1:0);
         DataCoin = 0;
         checkSelectChar = 0;
         for (int i = 0; i < boolcheckbuy.Count; i++)
         {
             boolcheckbuy[i] = false;
-            PlayerPrefs.SetInt("checkbuy"+i,boolcheckbuy[i]?1:0);
+            PlayerPrefs.SetInt(CHECK_BUY+i,boolcheckbuy[i]?1:0);
         }
 
         for (int i = 0; i < highscore.Count; i++)
@@ -134,6 +117,6 @@ public class SaveData : MonoBehaviour
             highscore[i] = 0;
         }
         Save();
-        saveHighScore();
+        SaveHighScore();
     }
 }

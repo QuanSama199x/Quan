@@ -17,7 +17,6 @@ public class RecTransformUI : MonoBehaviour
     }
 
     #region isPlaying
-    public float Score;
     public int Score0,Score1, Score2, Score3, Score4, Score5,scaleScore;
     public Text textScore;
     public Text textScaleScore;
@@ -25,7 +24,6 @@ public class RecTransformUI : MonoBehaviour
 
     public RectTransform recCompleteTable;
 
-    public int CountCoin;
     public Text textCoin;
     public Text textCoinGameOver;
     public RectTransform rectextCoin;
@@ -47,6 +45,9 @@ public class RecTransformUI : MonoBehaviour
     public float timebuttonBuyShield;
     public Image timeUseShield;
     public GameObject buttonShield;
+
+    public RectTransform recbuttonBuyx2Coin;
+    public GameObject buttonBuyx2Coin;
     #endregion
 
     #region isMenu
@@ -54,6 +55,7 @@ public class RecTransformUI : MonoBehaviour
     public RectTransform recSettingM;
     public RectTransform rectabtoPlay;
     public RectTransform recSelectChar;
+    public RectTransform recTableChar;
     public RectTransform recDataCoin;
     public RectTransform rectableHighScore;
     public RectTransform recbuttonHighScore;
@@ -70,9 +72,13 @@ public class RecTransformUI : MonoBehaviour
     #endregion
     
     public Text textScoreGameOver;
+    public int ScoreGameOver;
+    public int CoinGameOver;
     public GameObject NewRecord;
     public GameObject medal;
     public Text countMedal;
+
+    public float abc =0.1f;
 
 
     
@@ -87,7 +93,6 @@ public class RecTransformUI : MonoBehaviour
 
         y = 0;
         x = 0;
-        Score = 0;
         scaleScore = 1;
         
         magnet.SetActive(false);
@@ -110,55 +115,33 @@ public class RecTransformUI : MonoBehaviour
         RecTransform(rectableBuyChar);
         RecTransform(recIconShield);
         RecTransform(recbuttonBuyShield);
+        RecTransform(recbuttonBuyx2Coin);
+        StartCoroutine(CD());
+        StartCoroutine(Order());
+
+        rectableHighScore.localScale = new Vector2(0, 0);
+        rectableBuyChar.localScale = new Vector2(0, 0);
+        recSetting.localScale = new Vector2(0, 0);
+        recCompleteTable.localScale = new Vector2(0, 0);
+        TextDataCoin();
     }
-
-    // Update is called once per frame
-
-
+    IEnumerator CD()
+    {
+        yield return new WaitForSecondsRealtime(4);
+        StartCoroutine(CD());
+        abc = -abc;
+    }
     private bool up1,up2;
     void Update()
     {
         text.Rotate(0,0,0.3f);
         text.localPosition = new Vector2(x, y);
-        if (text.localPosition.y>=200)
-        {
-            up1 = true;
-        }
-        if (text.localPosition.y<=-200)
-        {
-            up1 = false;
-        }
-        if (!up1)
-        {
-            y += 0.2f;
-        }
-
-        if (up1)
-        {
-            y -= 0.2f;
-        }
-        if (text.localPosition.y>=80)
-        {
-            up2 = true;
-        }
-        if (text.localPosition.y<=-80)
-        {
-            up2 = false;
-        }
-        if (!up2)
-        {
-            x += 0.1f;
-        }
-
-        if (up2)
-        {
-            x -= 0.1f;
-        }
-        TextScore();
-        TextCoin();
-        countdownItem.fillAmount = (float) PlayerScript.Instance.timeGetItem / 15;
-
-        textDataCoin.text = SaveData.Instance.DataCoin.ToString();
+        
+            y += abc*2;
+       
+            x += abc;
+ 
+        countdownItem.fillAmount = (float) Custom.Instance.timeGetItem / Custom.Instance.maxTimeGetItem;
 
         if (haveShield)
         {
@@ -168,21 +151,13 @@ public class RecTransformUI : MonoBehaviour
         {
             iconShield.SetActive(false);
         }
-
-        if (buttonBuyShield.activeInHierarchy)
-        {
-            timebuttonBuyShield += Time.deltaTime;
-        }
-        if (timebuttonBuyShield>=4)
-        {
-            buttonBuyShield.SetActive(false);
-        }
+        TextScore();
 
     }
     
     public void TextScore()
     {
-        Score += (float) Time.deltaTime * 11 * scaleScore;
+        float Score = Config.Instance.Score;
         textScaleScore.text = scaleScore.ToString();
         Score0 = (int) Score / 100000;
         Score1 = (int) (Score-Score0*100000) / 10000;
@@ -191,26 +166,90 @@ public class RecTransformUI : MonoBehaviour
         Score4 = (int) (Score - Score0*100000 - Score1 * 10000-Score2*1000 - Score3*100) / 10;
         Score5 = (int)Score - Score0*100000 -Score1*10000- Score2*1000 -Score3*100-Score4*10;
         textScore.text =Score0.ToString()+ Score1.ToString() + Score2.ToString()+Score3.ToString()+Score4.ToString()+Score5.ToString();
-        textScoreGameOver.text = ((int)Score).ToString();
     }
-
-    #region MyRegion
-
     public void TextCoin()
     {
-        textCoin.text = CountCoin.ToString();
-        textCoinGameOver.text = textCoin.text;
+        textCoin.text = Config.Instance.Coin.ToString();
+    }   
+    public void TextDataCoin()
+    {
+        textDataCoin.text = SaveData.Instance.DataCoin.ToString();
     }
-
-    
-    
-
-    #endregion
-    
 
     public void RecTransform(RectTransform getTransform)
     {
         getTransform.transform.localPosition = new Vector2(getTransform.transform.localPosition.x*scaleX,getTransform.transform.localPosition.y*scaleY);
         getTransform.localScale = new Vector2(scaleX,scaleX);
     }
+
+    public void IsPlay()
+    {
+        StartCoroutine(Order2());
+    }
+
+    IEnumerator Translate(RectTransform rectransform, int position)
+    {
+        yield return new WaitForSecondsRealtime(0.001f);
+         if(rectransform.localPosition.x>position*scaleX-30*scaleX)
+        {
+            rectransform.localPosition = new Vector2(rectransform.localPosition.x-scaleX*30, rectransform.localPosition.y);
+            yield return Translate(rectransform, position);
+        }
+         else
+        {
+            rectransform.localPosition = new Vector2(position * scaleX, rectransform.localPosition.y);
+        }
+        
+    }
+    IEnumerator Order()
+    {
+        yield return new WaitForSecondsRealtime(1);
+        yield return Translate(recSettingM, 190);
+        yield return Translate(recbuttonHighScore, 190);
+        yield return Translate(buttonReset, 190);
+        yield return Translate(recSelectChar, 190);
+        yield return Translate(recDataCoin, -130);
+    }
+    IEnumerator Order2()
+    {
+        StartCoroutine(Translate(recbuttonBuyx2Coin, -150));
+        yield return Translate(recbuttonBuyShield, -150);
+        yield return Translate(recPause, -200);
+        yield return Translate(rectextScore, (int)115.62);
+        yield return Translate(rectextCoin, (int)147.37);
+        yield return new WaitForSecondsRealtime(3);
+        StartCoroutine(Translate(recbuttonBuyShield, -350));
+        StartCoroutine(Translate(recbuttonBuyx2Coin, -350));
+        yield return new WaitForSecondsRealtime(1);
+        buttonBuyx2Coin.SetActive(false);
+        buttonBuyShield.SetActive(false);
+
+    }
+    public IEnumerator OpenTable(RectTransform Table,float Scale)
+    {
+        yield return new WaitForSecondsRealtime(0.001f);
+        if(Table.localScale.x<Scale)
+        {
+            Table.localScale = new Vector2(Table.localScale.x + 0.2f, Table.localScale.y + 0.2f);
+            yield return OpenTable(Table,Scale);
+        }
+        
+    }
+
+    public IEnumerator CloseTable(RectTransform Table, float Scale)
+    {
+        yield return new WaitForSecondsRealtime(0.001f);
+        if (Table.localScale.x > Scale)
+        {
+            Table.localScale = new Vector2(Table.localScale.x - 0.2f, Table.localScale.y - 0.2f);
+            yield return CloseTable(Table, Scale);
+        }
+        else
+        {
+            Table.gameObject.SetActive(false);
+        }
+    }
+
 }
+
+

@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class ButtonScript : MonoBehaviour
 {
+    #region properties
     public static ButtonScript Instance;
 
     public AudioSource tab;
@@ -14,30 +15,30 @@ public class ButtonScript : MonoBehaviour
     public GameObject isPlaying;
     public GameObject isMenu;
     public GameObject isComplete;
+    public GameObject buttonPause;
     public GameObject pauseTable;
     public GameObject SettingTable;
     public GameObject TableChar;
-    public List<GameObject> checkbuy;
-    /*public GameObject blockKlee,blockQiqi,blockDiona,blockPaimon;*/
     public GameObject tableBuyChar;
-    public GameObject buyKlee,buyQiqi, buyDiona,buyPaimon,buyElaina,buyHuman;
+    public GameObject CDCoutinue;
+    public Text textCoutinue;
 
     public Scrollbar volume;
 
     public GameObject tableHighScore;
-
-
+    
     public AudioSource AudioBG;
 
-    
     public Image selectChar;
 
-    public List<Image> iconChar;
-    public List<Avatar> avtChar;
-    public List<GameObject> Char;
+    public GameObject Player;
+    public CharacterScript character;
+    public List<GameObject> CHARACTER;
+    public List<Char> Character;
 
-    public int setChar;
 
+    public int priceShield=100, pricex2Coin =200;
+    #endregion
     private void Awake()
     {
         Instance = this;
@@ -47,6 +48,17 @@ public class ButtonScript : MonoBehaviour
     void Start()
     {
         
+        /*for(int i=0; i<character.Character.Count;i++)
+        {
+            GameObject obj = Instantiate(character.Character[i]);
+            obj.transform.SetParent(Player.transform);
+        }*/
+        /*for (int i = 0; i< CHARACTER.Count; i++)
+        {
+            CHARACTER[i] =Instantiate( character.
+                Character[i]);
+            CHARACTER[i].transform.SetParent(Player.transform);
+        }*/
         isPlaying.SetActive(false);
         isComplete.SetActive(false);
         isMenu.SetActive(true);
@@ -63,60 +75,74 @@ public class ButtonScript : MonoBehaviour
     {
         AudioBG.volume=volume.value;
     }
-    
+    #region method
     public void ButtonNewGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        tab.Play();
-
+        SoundTab();
     }
 
     public void ButtonPause()
     {
-        SwipeManager.Instance.Reset();
+        InputScript.Instance.Reset();
         Time.timeScale = 0;
         pauseTable.SetActive(true);
-        tab.Play();
-        
+        SoundTab();
+
     }
 
     public bool isPlay;
     public void ButtonPlay()
     {
+        EventScript.Instance.isPlay.Invoke();
         isPlay = true;
         Time.timeScale = 1;
         isMenu.SetActive(false);
         isPlaying.SetActive(transform);
-        SwipeManager.Instance.animatorPlayer.SetBool("isPlay",true);
-        SwipeManager.Instance.animatorPlayer.updateMode = AnimatorUpdateMode.Normal;
-        tab.Play();
+        AnimationController.Instance.AnimationSetBool("isPlay", true);
+        AnimationController.Instance.animatorPlayer.updateMode = AnimatorUpdateMode.Normal;
+        SoundTab();
     }
-    
-
     public void ButtonContinue()
     {
-        SwipeManager.Instance.Reset();
-        Time.timeScale = 1;
+        InputScript.Instance.Reset();
         pauseTable.SetActive(false);
-        tab.Play();
+        StartCoroutine(CDTimeContinue());
+        SoundTab();
+    }
+    IEnumerator CDTimeContinue()
+    {
+        buttonPause.SetActive(false);
+        CDCoutinue.SetActive(true);
+        textCoutinue.text = 3.ToString();
+        yield return new WaitForSecondsRealtime(1);
+        textCoutinue.text = 2.ToString();
+        yield return new WaitForSecondsRealtime(1);
+        textCoutinue.text = 1.ToString();
+        yield return new WaitForSecondsRealtime(1);
+        CDCoutinue.SetActive(false);
+        buttonPause.SetActive(true);
+        Time.timeScale = 1;
+
     }
 
     public void ButtonMenu()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        tab.Play();
+        SoundTab();
     }
 
     public void ButtonSetting()
     {
         SettingTable.SetActive(true);
-        tab.Play();
+        StartCoroutine(RecTransformUI.Instance.OpenTable(RecTransformUI.Instance.recSetting, RecTransformUI.Instance.scaleX));
+        SoundTab();
     }
 
     public void ButtonXSetting()
     {
-        SettingTable.SetActive(false);
-        tab.Play();
+        StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.recSetting, 0));
+        SoundTab();
     }
 
     public void buttonUseShield()
@@ -124,227 +150,108 @@ public class ButtonScript : MonoBehaviour
         PlayerScript.Instance.isHaveShield = true;
         PlayerScript.Instance.powerShield = 3;
         RecTransformUI.Instance.buttonShield.SetActive(false);
+        SoundTab();
     }
 
     public void buttonBuyShield()
     {
-        if (SaveData.Instance.DataCoin>=100)
+        if (SaveData.Instance.DataCoin>=priceShield)
         {
             RecTransformUI.Instance.buttonBuyShield.SetActive(false);
             RecTransformUI.Instance.haveShield = true;
-            SaveData.Instance.DataCoin -= 100;
+            SaveData.Instance.DataCoin -= priceShield;
+            RecTransformUI.Instance.TextDataCoin();
             SaveData.Instance.Save();
         }
+        SoundTab();
+    }
+
+    public void buttonBuyx2Coin()
+    {
+        if (SaveData.Instance.DataCoin>=pricex2Coin)
+        {
+            Config.Instance.scaleCoin = 2;
+            RecTransformUI.Instance.buttonBuyx2Coin.SetActive(false);
+            SaveData.Instance.DataCoin -= pricex2Coin;
+            RecTransformUI.Instance.TextDataCoin();
+            SaveData.Instance.Save();
+        }
+        SoundTab();
     }
 
     #region Char
-
-    
-
-    
     public void SelectChar()
     {
         if (TableChar.activeInHierarchy)
         {
-            TableChar.SetActive(false);
+            StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.recTableChar, 0));
         }
         else
         {
             TableChar.SetActive(true);
+            StartCoroutine(RecTransformUI.Instance.OpenTable(RecTransformUI.Instance.recTableChar, 1));
         }
-        tab.Play();
-        
+        SoundTab();
     }
 
-    public void chooseKlee()
+    public void ChooseCharacters(int count)
     {
-        setChar = 3;
-        chooseChar();
-    }
-
-    public void chooseQiqi()
-    {
-        setChar = 4;
-        chooseChar();
-    }
-    public void chooseDiona()
-    {
-        setChar = 1;
-        chooseChar();
-    }
-    public void choosePaimon()
-    {
-        setChar = 2;
-        chooseChar();
-    }
-    public void chooseHili()
-    {
-        setChar = 0;
-        chooseChar();
-    }
-    public void chooseElaina()
-    {
-        setChar = 5;
-        chooseChar();
-    }
-    public void chooseHuman()
-    {
-        setChar = 6;
-        chooseChar();
-    }
-
-    public void chooseChar()
-    {
-        TableChar.SetActive(false);
-        selectChar.sprite = iconChar[setChar].sprite;
-        
-        
-        SwipeManager.Instance.animatorPlayer.avatar =avtChar[setChar];
-        PlayerScript.Instance.shoeLeft.transform.SetParent(PlayerScript.Instance.left[setChar].transform);
-        PlayerScript.Instance.shoeRight.transform.SetParent(PlayerScript.Instance.right[setChar].transform);
-        PlayerScript.Instance.magnet.transform.SetParent(PlayerScript.Instance.hand[setChar].transform);
-        SaveData.Instance.checkSelectChar = setChar;
-        for (int i = 0; i < Char.Count; i++)
+        StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.recTableChar, 0));
+        selectChar.sprite = Character[count].iconChar.sprite;
+        AnimationController.Instance.animatorPlayer.avatar = Character[count].avtChar;
+        Custom.Instance.shoeLeft.transform.SetParent(Character[count].left.transform);
+        Custom.Instance.shoeRight.transform.SetParent(Character[count].right.transform);
+        Custom.Instance.magnet.transform.SetParent(Character[count].hand.transform);
+        SaveData.Instance.checkSelectChar = count;
+        for (int i = 0; i < Character.Count; i++)
         {
-            if (i==setChar)
+            if (i==count)
             {
-                Char[i].SetActive(true);
+            
+                Character[i].setChar.SetActive(true);
             }
             else
             {
-                Char[i].SetActive(false);
+                Character[i].setChar.SetActive(false);
             }
         }
         SaveData.Instance.Save();
-
-        
-        tab.Play();
+        SoundTab();
     }
 
-    public void buttonblockKlee()
+    public void ButtonBlockChar(int count)
     {
-        tableBuyChar.SetActive(true);
-        buyKlee.SetActive(true);
-        tab.Play();
-    }
-    public void buttonblockQiqi()
-    {
-        tableBuyChar.SetActive(true);
-        buyQiqi.SetActive(true);
-        tab.Play();
-    }
-    public void buttonblockDiona()
-    {
-        tableBuyChar.SetActive(true);
-        buyDiona.SetActive(true);
-        tab.Play();
-    }
-    public void buttonblockPaimon()
-    {
-        tableBuyChar.SetActive(true);
-        buyPaimon.SetActive(true);
-        tab.Play();
-    }
-    public void buttonblockElaina()
-    {
-        tableBuyChar.SetActive(true);
-        buyElaina.SetActive(true);
-        tab.Play();
-    }
-    public void buttonblockHuman()
-    {
-        tableBuyChar.SetActive(true);
-        buyHuman.SetActive(true);
-        tab.Play();
-    }
-    
-    
-    public void BuyKlee()
-    {
-        if ( buyChar(800,checkbuy[2],buyKlee))
-        {
-            SaveData.Instance.boolcheckbuy[2] = true;
-            SaveData.Instance.Save();
-        }
-    }
+        Character[count].buyChar.SetActive(true);
 
-    public void BuyQiqi()
-    {
-        if (buyChar(800, checkbuy[3], buyQiqi))
-        {
-            SaveData.Instance.boolcheckbuy[3] = true;
-            SaveData.Instance.Save();
-        }
-        
+        tableBuyChar.SetActive(true);
+        StartCoroutine(RecTransformUI.Instance.OpenTable(RecTransformUI.Instance.rectableBuyChar, RecTransformUI.Instance.scaleX));
+        SoundTab();
     }
-    public void BuyPaimon()
+   
+    public void BuyCharacters( int count)
     {
-        if (buyChar(500, checkbuy[1], buyPaimon))
-        {
-            SaveData.Instance.boolcheckbuy[1] = true;
-            SaveData.Instance.Save();
-        }
         
-    }
-    public void BuyDiona()
-    {
-        if (buyChar(350, checkbuy[0], buyDiona))
+       
+        if (SaveData.Instance.DataCoin>=Character[count].price)
         {
-            SaveData.Instance.boolcheckbuy[0] = true;
-            SaveData.Instance.Save();
+            SaveData.Instance.DataCoin -= Character[count].price;
+            Character[count].checkBuy.SetActive(false);
+            SaveData.Instance.boolcheckbuy[count] = true;
+            SaveData.Instance.Save();        
         }
-        
-    }
-    public void BuyElaina()
-    {
-        if (buyChar(600, checkbuy[4], buyElaina))
-        {
-            SaveData.Instance.boolcheckbuy[4] = true;
-            SaveData.Instance.Save();
-        }
-        
-    }
-    public void BuyHuman()
-    {
-        if (buyChar(1000, checkbuy[5], buyHuman))
-        {
-            SaveData.Instance.boolcheckbuy[5] = true;
-            SaveData.Instance.Save();
-        }
-        
-    }
-    public bool buyChar(int price,GameObject block,GameObject buychar)
-    {
-        if (SaveData.Instance.DataCoin>=price)
-        {
-            SaveData.Instance.DataCoin -= price;
-            block.SetActive(false);
-            tableBuyChar.SetActive(false);
-            buychar.SetActive(false);
-            tab.Play();
 
-            return true;
-        }
-        else
-        {
-            tableBuyChar.SetActive(false);
-            buychar.SetActive(false);
-            tab.Play();
-
-            return false;
-        }
+            StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.rectableBuyChar, 0));
+            Character[count].buyChar.SetActive(false);
+            SoundTab();
     }
-
+   
     public void buttonXBuyChar()
     {
-        tableBuyChar.SetActive(false);
-        buyDiona.SetActive(false);
-        buyElaina.SetActive(false);
-        buyHuman.SetActive(false);
-        buyKlee.SetActive(false);
-        buyQiqi.SetActive(false);
-        buyPaimon.SetActive(false);
-        tab.Play();
+        StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.rectableBuyChar, 0));
+        for (int i = 1; i < Character.Count; i++)
+        {
+            Character[i].buyChar.SetActive(false);        }
+        SoundTab();
     }
     #endregion
 
@@ -352,30 +259,34 @@ public class ButtonScript : MonoBehaviour
     public void buttonopenHighScore()
     {
         tableHighScore.SetActive(true);
+        StartCoroutine(RecTransformUI.Instance.OpenTable(RecTransformUI.Instance.rectableHighScore, RecTransformUI.Instance.scaleX));
+        SoundTab();
     }
     
     public void buttoncloseHighScore()
     {
-        tableHighScore.SetActive(false);
+        StartCoroutine(RecTransformUI.Instance.CloseTable(RecTransformUI.Instance.rectableHighScore, 0));
+        SoundTab();
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    public void resetData()
+    public void SoundTab()
     {
-        SaveData.Instance.resetData();
         tab.Play();
     }
 
+    public void resetData()
+    {
+        SaveData.Instance.ResetData();
+        SoundTab();
+    }
+    #endregion
+}
+
+[System.Serializable]
+public class Char
+{
+    public GameObject left, right, hand,setChar,checkBuy,buyChar;
+    public Image iconChar;
+    public Avatar avtChar;
+    public int price;
 }

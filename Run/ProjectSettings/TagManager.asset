@@ -12,6 +12,7 @@ TagManager:
   - Shoes
   - Train
   - nonBlocker
+  - BlockerRoad
   layers:
   - Default
   - TransparentFX

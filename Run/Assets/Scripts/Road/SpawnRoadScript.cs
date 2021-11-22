@@ -6,6 +6,7 @@ using Random = UnityEngine.Random;
 
 public class SpawnRoadScript : MonoBehaviour
 {
+    public static int key;
     public static SpawnRoadScript Instance;
 
     private void Awake()
@@ -19,19 +20,25 @@ public class SpawnRoadScript : MonoBehaviour
     private Vector3 transformCoin;
     
     // Start is called before the first frame update
-    void Start()
+  
+    public void isStart()
     {
-        spawnroad(ObjectPool.Instance.poolRoad1.GetPooledObject(),new Vector3(0,-0.5f,100));
-        spawnroad(ObjectPool.Instance.poolRoad4.GetPooledObject(),new Vector3(0,-0.5f,200));
-        spawnroad(ObjectPool.Instance.poolRoad2.GetPooledObject(),new Vector3(0,-0.5f,300));
-
+        key = 1;
+        spawnroad(ObjectPool.Instance.PoolRoadDemo.GetPooledObject(Resources.Load<GameObject>("Road/RoadDemo")), new Vector3(0, -0.5f, 100));
+        key = 4;
+        spawnroad(ObjectPool.Instance.PoolRoadDemo.GetPooledObject(Resources.Load<GameObject>("Road/RoadDemo")), new Vector3(0, -0.5f, 200));
+        key = 2;
+        spawnroad(ObjectPool.Instance.PoolRoadDemo.GetPooledObject(Resources.Load<GameObject>("Road/RoadDemo")), new Vector3(0, -0.5f, 300));
+        /*spawnroad(ObjectPool.Instance.poolRoad[0].GetPooledObject(Resources.Load<GameObject>("Road/Road1")), new Vector3(0, -0.5f, 100));
+        spawnroad(ObjectPool.Instance.poolRoad[3].GetPooledObject(Resources.Load<GameObject>("Road/Road4")), new Vector3(0, -0.5f, 200));
+        spawnroad(ObjectPool.Instance.poolRoad[1].GetPooledObject(Resources.Load<GameObject>("Road/Road2")), new Vector3(0, -0.5f, 300));*/
     }
 
     void Update()
     {
-        if (listRoad.Count<4)
+        if (listRoad.Count < 4)
         {
-            SpawnRoad(new Vector3(listRoad[2].transform.position.x,listRoad[2].transform.position.y,listRoad[2].transform.position.z+100));
+            SpawnRoad(new Vector3(listRoad[2].transform.position.x, listRoad[2].transform.position.y, listRoad[2].transform.position.z + 100));
         }
     }
 
@@ -41,8 +48,7 @@ public class SpawnRoadScript : MonoBehaviour
         if (other.gameObject.tag == "Road")
         {
             listRoad.Remove(other.gameObject);
-            other.gameObject.SetActive(false);
-            
+            other.gameObject.SetActive(false);    
         }
 
         
@@ -63,6 +69,12 @@ public class SpawnRoadScript : MonoBehaviour
             other.transform.parent.gameObject.transform.SetParent(null);
             other.transform.parent.gameObject.transform.position= new Vector3(1000, 1000, 1000);
         }
+        if(other.gameObject.name == "Block1(Clone)" || other.gameObject.name == "Block2(Clone)" || other.gameObject.name == "Block3(Clone)")
+        {
+            other.transform.SetParent(null);
+            other.transform.position =new Vector3(1000, 1000, 1000);
+            other.gameObject.SetActive(false);
+        }
         
         
     }
@@ -70,84 +82,40 @@ public class SpawnRoadScript : MonoBehaviour
 
     public void SpawnRoad(Vector3 transformnewroad)
     {
-        randomRoad = Random.Range(1, 5);
-        switch (GamePlayScript.Instance.level)
+        key = Random.Range(1, 11);
+        spawnroad(ObjectPool.Instance.PoolRoadDemo.GetPooledObject(Resources.Load<GameObject>("Road/RoadDemo")), transformnewroad);
+        /*switch (GamePlayScript.Instance.level)
         {
-            case 1:
-                switch (randomRoad)
-                {
-                    case 1:
-                        spawnroad(ObjectPool.Instance.poolRoad1.GetPooledObject(),transformnewroad);
-                        break;
-                    case 2:
-                        spawnroad(ObjectPool.Instance.poolRoad2.GetPooledObject(),transformnewroad);
-                        break;
-                    case 3:
-                        spawnroad(ObjectPool.Instance.poolRoad3.GetPooledObject(),transformnewroad);
-                        break;
-                    case 4:
-                        spawnroad(ObjectPool.Instance.poolRoad4.GetPooledObject(),transformnewroad);
-                        break;
-                }
+            *//*case 1:
+                spawnroad(ObjectPool.Instance.poolRoad[randomRoad].GetPooledObject(Resources.Load<GameObject>("Road/Road" + (randomRoad + 1))), transformnewroad);
+
                 break;
             case 2:
-                switch (randomRoad)
-                {
-                    case 1:
-                        spawnroad(ObjectPool.Instance.poolRoad3.GetPooledObject(),transformnewroad);
-                        break;
-                    case 2:
-                        spawnroad(ObjectPool.Instance.poolRoad4.GetPooledObject(),transformnewroad);
-                        break;
-                    case 3:
-                        spawnroad(ObjectPool.Instance.poolRoad5.GetPooledObject(),transformnewroad);
-                        break;
-                    case 4:
-                        spawnroad(ObjectPool.Instance.poolRoad6.GetPooledObject(),transformnewroad);
-                        break;
-                }
+                spawnroad(ObjectPool.Instance.poolRoad[randomRoad].GetPooledObject(Resources.Load<GameObject>("Road/Road" + (randomRoad + 1))), transformnewroad);
                 break;
             case 3:
-                switch (randomRoad)
-                {
-                    case 1:
-                        spawnroad(ObjectPool.Instance.poolRoad5.GetPooledObject(),transformnewroad);
-                        break;
-                    case 2:
-                        spawnroad(ObjectPool.Instance.poolRoad6.GetPooledObject(),transformnewroad);
-                        break;
-                    case 3:
-                        spawnroad(ObjectPool.Instance.poolRoad7.GetPooledObject(),transformnewroad);
-                        break;
-                    case 4:
-                        spawnroad(ObjectPool.Instance.poolRoad8.GetPooledObject(),transformnewroad);
-                        break;
-                }
+                spawnroad(ObjectPool.Instance.poolRoad[randomRoad].GetPooledObject(Resources.Load<GameObject>("Road/Road" + (randomRoad + 1))), transformnewroad);
                 break;
             case 4:
-                switch (randomRoad)
-                {
-                    case 1:
-                        spawnroad(ObjectPool.Instance.poolRoad7.GetPooledObject(),transformnewroad);
-                        break;
-                    case 2:
-                        spawnroad(ObjectPool.Instance.poolRoad8.GetPooledObject(),transformnewroad);
-                        break;
-                    case 3:
-                        spawnroad(ObjectPool.Instance.poolRoad9.GetPooledObject(),transformnewroad);
-                        break;
-                    case 4:
-                        spawnroad(ObjectPool.Instance.poolRoad10.GetPooledObject(),transformnewroad);
-                        break;
-                }
-                break;
-                
-        }
-        
-        
+                spawnroad(ObjectPool.Instance.poolRoad[randomRoad].GetPooledObject(Resources.Load<GameObject>("Road/Road" + (randomRoad + 1))), transformnewroad);
+                break;*//*
+
+        }*/
+
+
     }
 
-    public void spawnroad(GameObject roadspawn,Vector3 transformnewroad)
+    /*public void spawnroad(GameObject roadspawn,Vector3 transformnewroad)
+    {
+        GameObject road = roadspawn;
+        if (road != null)
+        {
+            road.SetActive(true);
+            road.transform.position = transformnewroad;
+            listRoad.Add(road);
+        }
+    }*/
+    public void spawnroad(GameObject roadspawn, Vector3 transformnewroad)
     {
         GameObject road = roadspawn;
         if (road != null)
@@ -157,8 +125,8 @@ public class SpawnRoadScript : MonoBehaviour
             listRoad.Add(road);
         }
     }
-    
-    
-    
-        
+
+
+
+
 }
